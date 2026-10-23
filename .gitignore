@@ -1,0 +1,15 @@
+# Entorno Virtual (¡NUNCA subir a Git!)
+venv/
+.venv/
+
+# Variables de entorno y secretos (¡NUNCA subir credenciales!)
+.env
+!.env.example
+
+# Caché de Python
+__pycache__/
+*.py[cod]
+
+# Bases de datos locales
+*.db
+*.sqlite3
