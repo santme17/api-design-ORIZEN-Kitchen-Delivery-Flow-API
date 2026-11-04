@@ -1,7 +1,12 @@
 # Paso 3: importaciones
 from decimal import Decimal
+from typing import TYPE_CHECKING, Optional
 
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, Relationship, SQLModel
+
+if TYPE_CHECKING:
+    from app.models.pedido import Pedido
+    from app.models.producto import Producto
 
 
 # Paso 4: clase Base
@@ -16,6 +21,10 @@ class ItemPedido(ItemPedidoBase, table=True):
     pedido_id: int = Field(foreign_key="pedido.id", index=True)
     # Precio del producto al momento de la compra (lo fija el servidor)
     precio_unitario: Decimal = Field(max_digits=10, decimal_places=2)
+
+    # Relaciones (no son columnas)
+    pedido: Optional["Pedido"] = Relationship(back_populates="items")
+    producto: Optional["Producto"] = Relationship(back_populates="items")
 
 
 # Paso 6: DTO de creación (se usa anidado dentro de PedidoCreate)
