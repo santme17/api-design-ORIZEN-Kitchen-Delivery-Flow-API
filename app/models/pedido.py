@@ -1,13 +1,21 @@
 # Paso 3: importaciones
 from datetime import datetime
 from decimal import Decimal
+from typing import TYPE_CHECKING, Optional
 
 from pydantic import model_validator
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, Relationship, SQLModel
 
 from app.models.common import TZDateTime, utcnow
 from app.models.enums import EstadoOrden, TipoPedido
 from app.models.item_pedido import ItemPedidoCreate
+
+if TYPE_CHECKING:
+    from app.models.cliente import Cliente
+    from app.models.repartidor import Repartidor
+    from app.models.item_pedido import ItemPedido
+    from app.models.estado_pedido import EstadoPedido
+    from app.models.cronometro_proceso import CronometroProceso
 
 
 # Paso 4: clase Base
@@ -28,6 +36,20 @@ class Pedido(PedidoBase, table=True):
     # Lo calcula el servidor: suma de cantidad * precio_unitario de los ítems
     total: Decimal = Field(default=Decimal("0.00"), max_digits=10, decimal_places=2)
     fecha_creacion: datetime = Field(default_factory=utcnow, sa_type=TZDateTime)
+
+    # Relaciones (no son columnas)
+    cliente: Optional["Cliente"] = Relationship(back_populates="pedidos")
+    repartidor: Optional["Repartidor"] = Relationship(back_populates="pedidos")
+    items: list["ItemPedido"] = Relationship(back_populates="pedido")
+    # Historial y cronómetros se devuelven en orden cronológico
+    estados: list["EstadoPedido"] = Relationship(
+        back_populates="pedido",
+        sa_relationship_kwargs={"order_by": "EstadoPedido.fecha_cambio"},
+    )
+    cronometros: list["CronometroProceso"] = Relationship(
+        back_populates="pedido",
+        sa_relationship_kwargs={"order_by": "CronometroProceso.timestamp_inicio"},
+    )
 
 
 # Paso 6: DTO de creación (incluye los ítems; total y estado los define el servidor)
