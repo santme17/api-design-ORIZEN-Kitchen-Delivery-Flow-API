@@ -1,6 +1,5 @@
 # Paso 3: importaciones
 from datetime import datetime
-from uuid import UUID, uuid4
 
 from sqlmodel import Field, SQLModel
 
@@ -18,7 +17,7 @@ class RepartidorBase(SQLModel):
 
 # Paso 5: tabla de base de datos
 class Repartidor(RepartidorBase, table=True):
-    id: UUID = Field(default_factory=uuid4, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     fecha_registro: datetime = Field(default_factory=utcnow, sa_type=TZDateTime)
     # Soft delete: si tiene fecha, el repartidor está "eliminado"
     deleted_at: datetime | None = Field(default=None, sa_type=TZDateTime)
@@ -39,5 +38,5 @@ class RepartidorUpdate(SQLModel):
 
 # Paso 8: DTO de respuesta (no expone deleted_at)
 class RepartidorPublic(RepartidorBase):
-    id: UUID
+    id: int
     fecha_registro: datetime

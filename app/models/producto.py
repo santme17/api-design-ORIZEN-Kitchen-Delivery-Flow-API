@@ -1,6 +1,5 @@
 # Paso 3: importaciones
 from decimal import Decimal
-from uuid import UUID, uuid4
 
 from sqlmodel import Field, SQLModel
 
@@ -14,7 +13,7 @@ class ProductoBase(SQLModel):
 
 # Paso 5: tabla de base de datos
 class Producto(ProductoBase, table=True):
-    id: UUID = Field(default_factory=uuid4, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
 
 
 # Paso 6: DTO de creación
@@ -31,4 +30,4 @@ class ProductoUpdate(SQLModel):
 
 # Paso 8: DTO de respuesta
 class ProductoPublic(ProductoBase):
-    id: UUID
+    id: int
