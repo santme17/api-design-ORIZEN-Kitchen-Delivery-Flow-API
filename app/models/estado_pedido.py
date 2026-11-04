@@ -1,10 +1,15 @@
 # Paso 3: importaciones
 from datetime import datetime
+from typing import TYPE_CHECKING, Optional
 
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, Relationship, SQLModel
 
 from app.models.common import TZDateTime, utcnow
 from app.models.enums import EstadoOrden
+
+if TYPE_CHECKING:
+    from app.models.pedido import Pedido
+    from app.models.usuario import Usuario
 
 
 # Paso 4: clase Base
@@ -20,6 +25,10 @@ class EstadoPedido(EstadoPedidoBase, table=True):
     # Quién hizo el cambio (sale del JWT, no del body)
     usuario_id: int = Field(foreign_key="usuario.id")
     fecha_cambio: datetime = Field(default_factory=utcnow, sa_type=TZDateTime)
+
+    # Relaciones (no son columnas)
+    pedido: Optional["Pedido"] = Relationship(back_populates="estados")
+    usuario: Optional["Usuario"] = Relationship(back_populates="estados")
 
 
 # Paso 6: DTO de creación (pedido_id viene de la URL, usuario_id del token)
