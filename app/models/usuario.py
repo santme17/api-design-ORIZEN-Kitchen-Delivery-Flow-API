@@ -1,10 +1,14 @@
 # Paso 3: importaciones
 from datetime import datetime
+from typing import TYPE_CHECKING
 
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, Relationship, SQLModel
 
 from app.models.common import TZDateTime, utcnow
 from app.models.enums import RolUsuario
+
+if TYPE_CHECKING:
+    from app.models.estado_pedido import EstadoPedido
 
 
 # Paso 4: clase Base (campos compartidos)
@@ -19,6 +23,9 @@ class Usuario(UsuarioBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
     password_hash: str
     fecha_registro: datetime = Field(default_factory=utcnow, sa_type=TZDateTime)
+
+    # Relaciones (no son columnas)
+    estados: list["EstadoPedido"] = Relationship(back_populates="usuario")
 
 
 # Paso 6: DTO de creación (recibe la contraseña en claro, nunca se guarda así)

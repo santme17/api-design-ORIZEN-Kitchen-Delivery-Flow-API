@@ -1,9 +1,13 @@
 # Paso 3: importaciones
 from datetime import datetime
+from typing import TYPE_CHECKING
 
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, Relationship, SQLModel
 
 from app.models.common import TZDateTime, utcnow
+
+if TYPE_CHECKING:
+    from app.models.pedido import Pedido
 
 
 # Paso 4: clase Base
@@ -17,6 +21,9 @@ class ClienteBase(SQLModel):
 class Cliente(ClienteBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
     fecha_registro: datetime = Field(default_factory=utcnow, sa_type=TZDateTime)
+
+    # Relaciones (no son columnas)
+    pedidos: list["Pedido"] = Relationship(back_populates="cliente")
 
 
 # Paso 6: DTO de creación
