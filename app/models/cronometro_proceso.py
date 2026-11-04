@@ -1,11 +1,15 @@
 # Paso 3: importaciones
 from datetime import datetime
+from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy import Index, text
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, Relationship, SQLModel
 
 from app.models.common import TZDateTime, utcnow
 from app.models.enums import EstadoProceso, NombreProceso
+
+if TYPE_CHECKING:
+    from app.models.pedido import Pedido
 
 
 # Paso 4: clase Base
@@ -33,6 +37,9 @@ class CronometroProceso(CronometroProcesoBase, table=True):
     timestamp_fin: datetime | None = Field(default=None, sa_type=TZDateTime)
     # Lo calcula el servidor al detener el cronómetro
     duracion_segundos: int | None = Field(default=None, ge=0)
+
+    # Relaciones (no son columnas)
+    pedido: Optional["Pedido"] = Relationship(back_populates="cronometros")
 
 
 # Paso 6: DTO de creación (pedido_id viene de la URL)
