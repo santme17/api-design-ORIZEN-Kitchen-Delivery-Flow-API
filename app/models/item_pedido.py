@@ -1,20 +1,19 @@
 # Paso 3: importaciones
 from decimal import Decimal
-from uuid import UUID, uuid4
 
 from sqlmodel import Field, SQLModel
 
 
 # Paso 4: clase Base
 class ItemPedidoBase(SQLModel):
-    producto_id: UUID = Field(foreign_key="producto.id")
+    producto_id: int = Field(foreign_key="producto.id")
     cantidad: int = Field(gt=0)
 
 
 # Paso 5: tabla de base de datos
 class ItemPedido(ItemPedidoBase, table=True):
-    id: UUID = Field(default_factory=uuid4, primary_key=True)
-    pedido_id: UUID = Field(foreign_key="pedido.id", index=True)
+    id: int | None = Field(default=None, primary_key=True)
+    pedido_id: int = Field(foreign_key="pedido.id", index=True)
     # Precio del producto al momento de la compra (lo fija el servidor)
     precio_unitario: Decimal = Field(max_digits=10, decimal_places=2)
 
@@ -31,6 +30,6 @@ class ItemPedidoUpdate(SQLModel):
 
 # Paso 8: DTO de respuesta
 class ItemPedidoPublic(ItemPedidoBase):
-    id: UUID
-    pedido_id: UUID
+    id: int
+    pedido_id: int
     precio_unitario: Decimal

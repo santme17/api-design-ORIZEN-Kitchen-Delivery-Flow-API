@@ -1,6 +1,5 @@
 # Paso 3: importaciones
 from datetime import datetime
-from uuid import UUID, uuid4
 
 from sqlmodel import Field, SQLModel
 
@@ -17,7 +16,7 @@ class UsuarioBase(SQLModel):
 
 # Paso 5: tabla de base de datos
 class Usuario(UsuarioBase, table=True):
-    id: UUID = Field(default_factory=uuid4, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     password_hash: str
     fecha_registro: datetime = Field(default_factory=utcnow, sa_type=TZDateTime)
 
@@ -37,5 +36,5 @@ class UsuarioUpdate(SQLModel):
 
 # Paso 8: DTO de respuesta (sin password_hash)
 class UsuarioPublic(UsuarioBase):
-    id: UUID
+    id: int
     fecha_registro: datetime

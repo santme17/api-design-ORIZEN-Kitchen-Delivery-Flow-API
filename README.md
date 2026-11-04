@@ -50,7 +50,7 @@ erDiagram
     PEDIDO ||--o{ CRONOMETRO_PROCESO : "mide tiempos de"
 
     USUARIO {
-        uuid id PK
+        int id PK
         string email UK
         string password_hash
         string rol "ENUM: CAJERO, COCINA, REPARTIDOR, ADMIN"
@@ -59,7 +59,7 @@ erDiagram
     }
 
     CLIENTE {
-        uuid id PK
+        int id PK
         string nombre
         string telefono
         string email "nullable"
@@ -67,7 +67,7 @@ erDiagram
     }
 
     REPARTIDOR {
-        uuid id PK
+        int id PK
         string nombre
         string telefono
         string vehiculo
@@ -77,16 +77,16 @@ erDiagram
     }
 
     PRODUCTO {
-        uuid id PK
+        int id PK
         string nombre
         decimal precio "NUMERIC(10,2) COP"
         boolean activo
     }
 
     PEDIDO {
-        uuid id PK
-        uuid cliente_id FK
-        uuid repartidor_id FK "nullable, se asigna despues de crear"
+        int id PK
+        int cliente_id FK
+        int repartidor_id FK "nullable, se asigna despues de crear"
         string codigo_orden UK
         string tipo_pedido "ENUM: DOMICILIO, RECOGER"
         string direccion_entrega "nullable si es RECOGER"
@@ -96,25 +96,25 @@ erDiagram
     }
 
     ITEM_PEDIDO {
-        uuid id PK
-        uuid pedido_id FK
-        uuid producto_id FK
+        int id PK
+        int pedido_id FK
+        int producto_id FK
         int cantidad
         decimal precio_unitario "NUMERIC(10,2), precio al momento de la compra"
     }
 
     ESTADO_PEDIDO {
-        uuid id PK
-        uuid pedido_id FK
-        uuid usuario_id FK
+        int id PK
+        int pedido_id FK
+        int usuario_id FK
         string estado "ENUM"
         string observacion "nullable"
         datetime fecha_cambio
     }
 
     CRONOMETRO_PROCESO {
-        uuid id PK
-        uuid pedido_id FK
+        int id PK
+        int pedido_id FK
         string nombre_proceso "ENUM: ESPERA_COLA, PREPARACION, EMPAQUETADO, TRANSITO"
         string estado_proceso "ENUM: EN_CURSO, COMPLETADO"
         datetime timestamp_inicio

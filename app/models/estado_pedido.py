@@ -1,6 +1,5 @@
 # Paso 3: importaciones
 from datetime import datetime
-from uuid import UUID, uuid4
 
 from sqlmodel import Field, SQLModel
 
@@ -16,10 +15,10 @@ class EstadoPedidoBase(SQLModel):
 
 # Paso 5: tabla de base de datos
 class EstadoPedido(EstadoPedidoBase, table=True):
-    id: UUID = Field(default_factory=uuid4, primary_key=True)
-    pedido_id: UUID = Field(foreign_key="pedido.id", index=True)
+    id: int | None = Field(default=None, primary_key=True)
+    pedido_id: int = Field(foreign_key="pedido.id", index=True)
     # Quién hizo el cambio (sale del JWT, no del body)
-    usuario_id: UUID = Field(foreign_key="usuario.id")
+    usuario_id: int = Field(foreign_key="usuario.id")
     fecha_cambio: datetime = Field(default_factory=utcnow, sa_type=TZDateTime)
 
 
@@ -33,7 +32,7 @@ class EstadoPedidoCreate(EstadoPedidoBase):
 
 # Paso 8: DTO de respuesta
 class EstadoPedidoPublic(EstadoPedidoBase):
-    id: UUID
-    pedido_id: UUID
-    usuario_id: UUID
+    id: int
+    pedido_id: int
+    usuario_id: int
     fecha_cambio: datetime

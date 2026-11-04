@@ -1,6 +1,5 @@
 # Paso 3: importaciones
 from datetime import datetime
-from uuid import UUID, uuid4
 
 from sqlalchemy import Index, text
 from sqlmodel import Field, SQLModel
@@ -27,8 +26,8 @@ class CronometroProceso(CronometroProcesoBase, table=True):
         ),
     )
 
-    id: UUID = Field(default_factory=uuid4, primary_key=True)
-    pedido_id: UUID = Field(foreign_key="pedido.id", index=True)
+    id: int | None = Field(default=None, primary_key=True)
+    pedido_id: int = Field(foreign_key="pedido.id", index=True)
     estado_proceso: EstadoProceso = Field(default=EstadoProceso.EN_CURSO)
     timestamp_inicio: datetime = Field(default_factory=utcnow, sa_type=TZDateTime)
     timestamp_fin: datetime | None = Field(default=None, sa_type=TZDateTime)
@@ -47,8 +46,8 @@ class CronometroProcesoCreate(CronometroProcesoBase):
 
 # Paso 8: DTO de respuesta
 class CronometroProcesoPublic(CronometroProcesoBase):
-    id: UUID
-    pedido_id: UUID
+    id: int
+    pedido_id: int
     estado_proceso: EstadoProceso
     timestamp_inicio: datetime
     timestamp_fin: datetime | None
