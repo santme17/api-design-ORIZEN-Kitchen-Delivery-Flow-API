@@ -26,7 +26,8 @@ class EstadoPedido(EstadoPedidoBase, table=True):
     usuario_id: int = Field(foreign_key="usuario.id")
     fecha_cambio: datetime = Field(default_factory=utcnow, sa_type=TZDateTime)
 
-    # Relaciones (no son columnas)
+    # Relaciones (no son columnas). Son el otro lado de Pedido.estados y Usuario.estados:
+    # sin ellas, back_populates en esas clases rompe la configuración de los mapeos.
     pedido: Optional["Pedido"] = Relationship(back_populates="estados")
     usuario: Optional["Usuario"] = Relationship(back_populates="estados")
 

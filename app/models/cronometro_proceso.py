@@ -19,7 +19,9 @@ class CronometroProcesoBase(SQLModel):
 
 # Paso 5: tabla de base de datos
 class CronometroProceso(CronometroProcesoBase, table=True):
-    # Un solo cronómetro activo por proceso y pedido (índice único parcial de PostgreSQL)
+    # Un solo cronómetro activo por proceso y pedido (índice único parcial).
+    # sqlite_where hace que SQLite también lo cree parcial; sin él, SQLite crearía un
+    # índice único completo y no dejaría reiniciar un proceso ya completado.
     __table_args__ = (
         Index(
             "uq_cronometro_activo",
@@ -27,6 +29,7 @@ class CronometroProceso(CronometroProcesoBase, table=True):
             "nombre_proceso",
             unique=True,
             postgresql_where=text("timestamp_fin IS NULL"),
+            sqlite_where=text("timestamp_fin IS NULL"),
         ),
     )
 
@@ -38,7 +41,7 @@ class CronometroProceso(CronometroProcesoBase, table=True):
     # Lo calcula el servidor al detener el cronómetro
     duracion_segundos: int | None = Field(default=None, ge=0)
 
-    # Relaciones (no son columnas)
+    # Relación (no es columna): el otro lado de Pedido.cronometros
     pedido: Optional["Pedido"] = Relationship(back_populates="cronometros")
 
 
