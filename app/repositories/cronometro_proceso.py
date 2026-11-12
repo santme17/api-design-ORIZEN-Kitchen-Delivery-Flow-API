@@ -1,4 +1,4 @@
-j# app/repositories/cronometro_proceso.py
+# app/repositories/cronometro_proceso.py
 from datetime import datetime, timezone
 
 from sqlalchemy.ext.asyncio import AsyncSession
