@@ -8,7 +8,8 @@ Dos formas de ejecutarlo (desde la raíz del proyecto, con el venv activo):
                 python -m app.main --servicios     (solo la capa de servicios)
                 python -m app.main --repositorios  (solo la capa de repositorios)
                 python -m app.main --postgres      (PostgreSQL local del .env)
-  2) Endpoint:  uvicorn app.main:app --reload  y abrir http://127.0.0.1:8000/docs
+  2) Endpoint:  uvicorn app.main:app --reload  y abrir http://127.0.0.1:8000/scalar
+                (documentación interactiva con Scalar; Swagger y ReDoc están desactivados)
                 GET  /test/repositories             (Capa 3)
                 POST /test-services                 (Capa 4)
                 Ambos aceptan ?db=postgres          (PostgreSQL local del .env)
@@ -27,11 +28,14 @@ import sys
 import warnings
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
-from collections.abc import Awaitable
+from collections.abc import AsyncIterator, Awaitable
+from contextlib import asynccontextmanager
 from types import SimpleNamespace
 from typing import Any
 
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import HTMLResponse
+from scalar_fastapi import get_scalar_api_reference
 from sqlalchemy.engine import make_url
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import (
@@ -78,7 +82,10 @@ from app.repositories import (
     RepartidorRepository,
     UsuarioRepository,
 )
+from app.core.config import settings
+from app.core.database import init_db
 from app.core.security import verify_password
+from app.routers import api_router
 from app.services import (
     ClienteService,
     CronometroProcesoService,
@@ -908,13 +915,36 @@ def resumen(resultados: list[dict[str, Any]]) -> dict[str, int]:
 # Endpoint de prueba (FastAPI)
 # ==============================================================
 
-app = FastAPI(title="ORIZEN - Arnés de pruebas (Capa 3 y Capa 4)")
+@asynccontextmanager
+async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
+    # Crea las tablas (si no existen) en la base de datos del .env antes de atender peticiones
+    await init_db()
+    yield
+
+
+# docs_url/redoc_url en None: se quitan Swagger UI y ReDoc, la documentación es solo Scalar
+app = FastAPI(
+    title="ORIZEN - Kitchen & Delivery Flow API",
+    lifespan=lifespan,
+    docs_url=None,
+    redoc_url=None,
+)
+
+# Capa 5: todos los routers quedan bajo el prefijo de la API (API_V1_STR del .env)
+app.include_router(api_router, prefix=settings.API_V1_STR)
+
+
+@app.get("/scalar", include_in_schema=False)
+async def scalar_docs() -> HTMLResponse:
+    """Documentación interactiva con Scalar (lee el mismo /openapi.json que Swagger)."""
+    return get_scalar_api_reference(openapi_url=app.openapi_url, title=app.title)
 
 
 @app.get("/")
 async def raiz() -> dict[str, str]:
     return {
         "mensaje": "Arnés de pruebas de ORIZEN",
+        "docs": "GET /scalar",
         "repositorios": "GET /test/repositories",
         "servicios": "POST /test-services",
     }
