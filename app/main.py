@@ -35,6 +35,7 @@ from typing import Any
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
+from fastapi.middleware.cors import CORSMiddleware
 from scalar_fastapi import get_scalar_api_reference
 from sqlalchemy.engine import make_url
 from sqlalchemy.exc import IntegrityError
@@ -83,7 +84,7 @@ from app.repositories import (
     UsuarioRepository,
 )
 from app.core.config import settings
-from app.core.database import init_db
+from app.core.errors import registrar_manejadores
 from app.core.security import verify_password
 from app.routers import api_router
 from app.services import (
@@ -917,8 +918,7 @@ def resumen(resultados: list[dict[str, Any]]) -> dict[str, int]:
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
-    # Crea las tablas (si no existen) en la base de datos del .env antes de atender peticiones
-    await init_db()
+    # Las tablas las crea Alembic:  alembic upgrade head  (antes de arrancar uvicorn)
     yield
 
 
@@ -928,6 +928,18 @@ app = FastAPI(
     lifespan=lifespan,
     docs_url=None,
     redoc_url=None,
+)
+
+# Convierte los IntegrityError de la BD en 409 (en vez de 500)
+registrar_manejadores(app)
+
+# CORS: deja que el frontend (otro puerto/dominio) llame la API desde el navegador
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.CORS_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Capa 5: todos los routers quedan bajo el prefijo de la API (API_V1_STR del .env)
