@@ -16,6 +16,9 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api.orizen/v1"
     ECHO_SQL: bool = False
 
+    # Orígenes del frontend que pueden llamar la API (CORS)
+    CORS_ORIGINS: list[str] = ["http://localhost:5173", "http://localhost:3000"]
+
     # Selección de Base de Datos: "sqlite" o "postgres"
     DB_TYPE: Literal["sqlite", "postgres"] = "sqlite"
 
