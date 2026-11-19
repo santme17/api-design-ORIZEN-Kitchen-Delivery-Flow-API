@@ -85,7 +85,6 @@ from app.repositories import (
 )
 from app.core.config import settings
 from app.core.errors import registrar_manejadores
-from app.core.database import init_db
 from app.core.security import verify_password
 from app.routers import api_router
 from app.services import (
@@ -919,8 +918,7 @@ def resumen(resultados: list[dict[str, Any]]) -> dict[str, int]:
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
-    # Crea las tablas (si no existen) en la base de datos del .env antes de atender peticiones
-    await init_db()
+    # Las tablas las crea Alembic:  alembic upgrade head  (antes de arrancar uvicorn)
     yield
 
 
