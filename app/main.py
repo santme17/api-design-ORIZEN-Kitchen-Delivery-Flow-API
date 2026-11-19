@@ -35,6 +35,7 @@ from typing import Any
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
+from fastapi.middleware.cors import CORSMiddleware
 from scalar_fastapi import get_scalar_api_reference
 from sqlalchemy.engine import make_url
 from sqlalchemy.exc import IntegrityError
@@ -933,6 +934,15 @@ app = FastAPI(
 
 # Convierte los IntegrityError de la BD en 409 (en vez de 500)
 registrar_manejadores(app)
+
+# CORS: deja que el frontend (otro puerto/dominio) llame la API desde el navegador
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.CORS_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Capa 5: todos los routers quedan bajo el prefijo de la API (API_V1_STR del .env)
 app.include_router(api_router, prefix=settings.API_V1_STR)
