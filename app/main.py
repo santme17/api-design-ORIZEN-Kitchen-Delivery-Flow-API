@@ -83,6 +83,7 @@ from app.repositories import (
     UsuarioRepository,
 )
 from app.core.config import settings
+from app.core.errors import registrar_manejadores
 from app.core.database import init_db
 from app.core.security import verify_password
 from app.routers import api_router
@@ -929,6 +930,9 @@ app = FastAPI(
     docs_url=None,
     redoc_url=None,
 )
+
+# Convierte los IntegrityError de la BD en 409 (en vez de 500)
+registrar_manejadores(app)
 
 # Capa 5: todos los routers quedan bajo el prefijo de la API (API_V1_STR del .env)
 app.include_router(api_router, prefix=settings.API_V1_STR)
