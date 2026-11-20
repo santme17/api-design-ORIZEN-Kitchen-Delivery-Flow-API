@@ -1,7 +1,7 @@
 # app/routers/clientes.py
 from fastapi import APIRouter, status
 
-from app.api.deps import ClienteServiceDep
+from app.api.deps import AdminOCajero, ClienteServiceDep
 from app.models.cliente import ClienteCreate, ClientePublic, ClienteUpdate
 
 # Los clientes no se borran (tienen pedidos asociados): no hay DELETE.
@@ -13,6 +13,7 @@ router = APIRouter(prefix="/customers", tags=["Clientes"])
     response_model=ClientePublic,
     status_code=status.HTTP_201_CREATED,
     summary="Registrar cliente",
+    dependencies=[AdminOCajero],
     description="Registra un nuevo cliente con nombre y teléfono.",
 )
 async def create_cliente(
@@ -54,6 +55,7 @@ async def get_cliente(
     "/{cliente_id}",
     response_model=ClientePublic,
     summary="Actualizar cliente",
+    dependencies=[AdminOCajero],
     description="Actualiza solo los campos enviados. Nombre y teléfono no pueden quedar vacíos.",
 )
 async def update_cliente(
