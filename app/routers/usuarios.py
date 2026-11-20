@@ -1,12 +1,13 @@
 # app/routers/usuarios.py
 from fastapi import APIRouter, status
 
-from app.api.deps import UsuarioServiceDep
+from app.api.deps import SoloAdmin, UsuarioServiceDep
 from app.models.enums import RolUsuario
 from app.models.usuario import UsuarioCreate, UsuarioPublic, UsuarioUpdate
 
 # response_model=UsuarioPublic nunca deja salir el password_hash.
-router = APIRouter(prefix="/users", tags=["Usuarios"])
+# Solo el ADMIN gestiona cuentas.
+router = APIRouter(prefix="/users", tags=["Usuarios"], dependencies=[SoloAdmin])
 
 
 @router.post(
