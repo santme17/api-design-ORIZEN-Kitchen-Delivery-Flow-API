@@ -19,6 +19,7 @@ from app.api.deps import (
     ProductoServiceDep,
     RepartidorRepoDep,
     RepartidorServiceDep,
+    ReporteServiceDep,
     SessionDep,
     SkipQuery,
     SoloAdmin,
@@ -49,6 +50,7 @@ __all__ = [
     "PedidoServiceDep",
     "ProductoServiceDep",
     "RepartidorServiceDep",
+    "ReporteServiceDep",
     "UsuarioServiceDep",
     # Nivel 4: usuario autenticado y roles
     "UsuarioActualDep",
