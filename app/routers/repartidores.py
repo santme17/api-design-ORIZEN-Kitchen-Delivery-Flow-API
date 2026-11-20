@@ -1,7 +1,7 @@
 # app/routers/repartidores.py
 from fastapi import APIRouter, status
 
-from app.api.deps import RepartidorServiceDep
+from app.api.deps import RepartidorServiceDep, SoloAdmin
 from app.models.enums import EstadoDisponibilidad, EstadoOrden
 from app.models.pedido import PedidoPublic
 from app.models.repartidor import RepartidorCreate, RepartidorPublic, RepartidorUpdate
@@ -14,6 +14,7 @@ router = APIRouter(prefix="/couriers", tags=["Repartidores"])
     response_model=RepartidorPublic,
     status_code=status.HTTP_201_CREATED,
     summary="Registrar repartidor",
+    dependencies=[SoloAdmin],
     description="Registra un repartidor (no puede crearse como OCUPADO).",
 )
 async def create_repartidor(
@@ -71,6 +72,7 @@ async def list_pedidos_repartidor(
     "/{repartidor_id}",
     response_model=RepartidorPublic,
     summary="Actualizar repartidor",
+    dependencies=[SoloAdmin],
     description="Actualiza los campos enviados. OCUPADO solo lo asigna el sistema.",
 )
 async def update_repartidor(
@@ -85,6 +87,7 @@ async def update_repartidor(
     "/{repartidor_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Eliminar repartidor",
+    dependencies=[SoloAdmin],
     description="Borrado lógico (deleted_at). 409 si tiene un pedido activo.",
 )
 async def delete_repartidor(
