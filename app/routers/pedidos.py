@@ -1,5 +1,5 @@
 # app/routers/pedidos.py
-from datetime import datetime
+from datetime import date, datetime
 
 from fastapi import APIRouter, status
 
@@ -49,7 +49,10 @@ async def create_pedido(
     "/",
     response_model=list[PedidoPublic],
     summary="Listar pedidos",
-    description="Lista paginada de pedidos con filtros opcionales por estado, tipo, cliente y rango de fechas.",
+    description=(
+        "Lista paginada con filtros por estado, tipo, cliente y fechas. "
+        "`fecha=2026-11-18` trae los pedidos de ese día en hora de Colombia."
+    ),
 )
 async def list_pedidos(
     service: PedidoServiceDep,
@@ -60,6 +63,7 @@ async def list_pedidos(
     cliente_id: int | None = None,
     fecha_desde: datetime | None = None,
     fecha_hasta: datetime | None = None,
+    fecha: date | None = None,
 ) -> list[PedidoPublic]:
     return await service.list_all(
         skip=skip,
@@ -69,6 +73,7 @@ async def list_pedidos(
         cliente_id=cliente_id,
         fecha_desde=fecha_desde,
         fecha_hasta=fecha_hasta,
+        fecha=fecha,
     )
 
 
