@@ -3,7 +3,14 @@ from datetime import datetime
 
 from fastapi import APIRouter, status
 
-from app.api.deps import AdminOCajero, EstadoPedidoServiceDep, PedidoServiceDep, UsuarioActualDep
+from app.api.deps import (
+    AdminOCajero,
+    EstadoPedidoServiceDep,
+    LimitQuery,
+    PedidoServiceDep,
+    SkipQuery,
+    UsuarioActualDep,
+)
 from app.models.enums import EstadoOrden, TipoPedido
 from app.models.estado_pedido import EstadoPedidoPublic
 from app.models.pedido import (
@@ -46,8 +53,8 @@ async def create_pedido(
 )
 async def list_pedidos(
     service: PedidoServiceDep,
-    skip: int = 0,
-    limit: int = 100,
+    skip: SkipQuery = 0,
+    limit: LimitQuery = 100,
     estado: EstadoOrden | None = None,
     tipo_pedido: TipoPedido | None = None,
     cliente_id: int | None = None,
