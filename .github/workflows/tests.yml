@@ -1,0 +1,35 @@
+# .github/workflows/tests.yml
+# Corre las pruebas en cada push y en cada PR hacia develop o main.
+name: Pruebas
+
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+    branches: [develop, main]
+
+jobs:
+  pruebas:
+    runs-on: ubuntu-latest
+    env:
+      SECRET_KEY: clave-solo-para-ci-con-mas-de-32-caracteres
+      FIRST_ADMIN_PASSWORD: clave-solo-para-ci
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt -r requirements-dev.txt
+
+      - name: Arnés de las capas 3 y 4
+        run: python -m app.main
+
+      - name: Pruebas HTTP (pytest)
+        run: pytest -q
+
+      - name: Las migraciones aplican sobre una BD vacía
+        run: alembic upgrade head
