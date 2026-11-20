@@ -1,7 +1,7 @@
 # app/routers/repartidores.py
 from fastapi import APIRouter, status
 
-from app.api.deps import RepartidorServiceDep, SoloAdmin
+from app.api.deps import LimitQuery, RepartidorServiceDep, SkipQuery, SoloAdmin
 from app.models.enums import EstadoDisponibilidad, EstadoOrden
 from app.models.pedido import PedidoPublic
 from app.models.repartidor import RepartidorCreate, RepartidorPublic, RepartidorUpdate
@@ -32,8 +32,8 @@ async def create_repartidor(
 )
 async def list_repartidores(
     service: RepartidorServiceDep,
-    skip: int = 0,
-    limit: int = 100,
+    skip: SkipQuery = 0,
+    limit: LimitQuery = 100,
     estado: EstadoDisponibilidad | None = None,
 ) -> list[RepartidorPublic]:
     return await service.list_all(skip=skip, limit=limit, estado=estado)
@@ -61,8 +61,8 @@ async def get_repartidor(
 async def list_pedidos_repartidor(
     repartidor_id: int,
     service: RepartidorServiceDep,
-    skip: int = 0,
-    limit: int = 100,
+    skip: SkipQuery = 0,
+    limit: LimitQuery = 100,
     estado: EstadoOrden | None = None,
 ) -> list[PedidoPublic]:
     return await service.list_pedidos(repartidor_id, skip=skip, limit=limit, estado=estado)
