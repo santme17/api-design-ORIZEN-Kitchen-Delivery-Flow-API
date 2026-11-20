@@ -7,12 +7,17 @@
 Como la sesión se cachea por petición, todos los repositorios y servicios de
 una misma petición comparten la MISMA sesión (y la misma transacción).
 """
-from typing import Annotated
+from typing import Annotated, Any
 
-from fastapi import Depends, Header
+import jwt
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_session
+from app.core.security import decode_access_token
+from app.models.enums import RolUsuario
+from app.models.usuario import Usuario
 from app.repositories import (
     ClienteRepository,
     CronometroProcesoRepository,
@@ -24,6 +29,7 @@ from app.repositories import (
     UsuarioRepository,
 )
 from app.services import (
+    AuthService,
     ClienteService,
     CronometroProcesoService,
     EstadoPedidoService,
@@ -171,21 +177,68 @@ CronometroProcesoServiceDep = Annotated[
 ]
 
 
+def get_auth_service(usuario_repo: UsuarioRepoDep) -> AuthService:
+    return AuthService(usuario_repo)
+
+
+AuthServiceDep = Annotated[AuthService, Depends(get_auth_service)]
+
+
 # ==========================================
-# Usuario que hace la petición
-# TEMPORAL: mientras no exista el login con JWT, el id del usuario llega en el
-# header `X-Usuario-Id`. Cuando se implemente la seguridad solo se cambia esta
-# función (leerá el token); los routers no se tocan.
+# Nivel 4: Usuario autenticado (JWT) y roles
 # ==========================================
 
-
-def get_usuario_actual_id(
-    x_usuario_id: Annotated[
-        int,
-        Header(description="Id del usuario que realiza la acción (temporal, hasta tener JWT)"),
-    ],
-) -> int:
-    return x_usuario_id
+# auto_error=False para responder 401 (y no 403) cuando falta el token
+bearer_scheme = HTTPBearer(auto_error=False, description="Token obtenido en POST /auth/login")
 
 
-UsuarioActualIdDep = Annotated[int, Depends(get_usuario_actual_id)]
+async def get_usuario_actual(
+    credenciales: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer_scheme)],
+    usuario_repo: UsuarioRepoDep,
+) -> Usuario:
+    """Lee el token del header `Authorization: Bearer <token>` y devuelve el usuario."""
+    no_autorizado = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Token inválido o vencido",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    if credenciales is None:
+        raise no_autorizado
+    try:
+        payload = decode_access_token(credenciales.credentials)
+        usuario_id = int(payload["sub"])
+    except (jwt.InvalidTokenError, KeyError, ValueError):
+        raise no_autorizado from None
+
+    usuario = await usuario_repo.get_by_id(usuario_id)
+    if not usuario or not usuario.activo:
+        raise no_autorizado
+    return usuario
+
+
+UsuarioActualDep = Annotated[Usuario, Depends(get_usuario_actual)]
+
+
+def requiere_roles(*roles: RolUsuario) -> Any:
+    """Dependencia que deja pasar solo a los roles indicados (403 para los demás).
+
+    Uso en un router:  dependencies=[SoloAdmin]
+    """
+
+    async def verificar_rol(usuario: UsuarioActualDep) -> Usuario:
+        if usuario.rol not in roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Tu rol no tiene permiso para esta acción",
+            )
+        return usuario
+
+    return Depends(verificar_rol)
+
+
+SoloAdmin = requiere_roles(RolUsuario.ADMIN)
+AdminOCajero = requiere_roles(RolUsuario.ADMIN, RolUsuario.CAJERO)
+AdminOCocina = requiere_roles(RolUsuario.ADMIN, RolUsuario.COCINA)
+EquipoOperativo = requiere_roles(
+    RolUsuario.ADMIN, RolUsuario.COCINA, RolUsuario.REPARTIDOR
+)
