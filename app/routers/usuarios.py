@@ -1,80 +1,80 @@
-# app/routers/productos.py
+# app/routers/usuarios.py
 from fastapi import APIRouter, status
 
-from app.api.deps import ProductoServiceDep, SoloAdmin
-from app.models.producto import ProductoCreate, ProductoPublic, ProductoUpdate
+from app.api.deps import LimitQuery, SkipQuery, SoloAdmin, UsuarioServiceDep
+from app.models.enums import RolUsuario
+from app.models.usuario import UsuarioCreate, UsuarioPublic, UsuarioUpdate
 
-router = APIRouter(prefix="/products", tags=["Productos"])
+# response_model=UsuarioPublic nunca deja salir el password_hash.
+# Solo el ADMIN gestiona cuentas.
+router = APIRouter(prefix="/users", tags=["Usuarios"], dependencies=[SoloAdmin])
 
 
 @router.post(
     "/",
-    response_model=ProductoPublic,
+    response_model=UsuarioPublic,
     status_code=status.HTTP_201_CREATED,
-    summary="Crear producto",
-    dependencies=[SoloAdmin],
-    description="Agrega un producto al menú validando que el nombre no exista.",
+    summary="Registrar usuario",
+    description="Crea una cuenta del sistema validando que el email no exista.",
 )
-async def create_producto(
-    producto_in: ProductoCreate,
-    service: ProductoServiceDep,
-) -> ProductoPublic:
-    return await service.create(producto_in)
+async def create_usuario(
+    usuario_in: UsuarioCreate,
+    service: UsuarioServiceDep,
+) -> UsuarioPublic:
+    return await service.create(usuario_in)
 
 
 @router.get(
     "/",
-    response_model=list[ProductoPublic],
-    summary="Listar productos",
-    description="Lista paginada del menú. `search` filtra por nombre y `only_active` oculta los desactivados.",
+    response_model=list[UsuarioPublic],
+    summary="Listar usuarios",
+    description="Lista paginada de usuarios con filtros opcionales por rol y solo activos.",
 )
-async def list_productos(
-    service: ProductoServiceDep,
-    skip: int = 0,
-    limit: int = 100,
-    search: str | None = None,
+async def list_usuarios(
+    service: UsuarioServiceDep,
+    skip: SkipQuery = 0,
+    limit: LimitQuery = 100,
+    rol: RolUsuario | None = None,
     only_active: bool = False,
-) -> list[ProductoPublic]:
-    return await service.list_all(skip=skip, limit=limit, search=search, only_active=only_active)
+) -> list[UsuarioPublic]:
+    return await service.list_all(skip=skip, limit=limit, rol=rol, only_active=only_active)
 
 
 @router.get(
-    "/{producto_id}",
-    response_model=ProductoPublic,
-    summary="Obtener producto por ID",
-    description="Busca un producto por ID o devuelve 404 si no existe.",
+    "/{usuario_id}",
+    response_model=UsuarioPublic,
+    summary="Obtener usuario por ID",
+    description="Busca un usuario por ID o devuelve 404 si no existe.",
 )
-async def get_producto(
-    producto_id: int,
-    service: ProductoServiceDep,
-) -> ProductoPublic:
-    return await service.get_by_id(producto_id)
+async def get_usuario(
+    usuario_id: int,
+    service: UsuarioServiceDep,
+) -> UsuarioPublic:
+    return await service.get_by_id(usuario_id)
 
 
 @router.patch(
-    "/{producto_id}",
-    response_model=ProductoPublic,
-    summary="Actualizar producto",
-    dependencies=[SoloAdmin],
-    description="Actualiza nombre, precio o disponibilidad. El cambio de precio no altera pedidos existentes.",
+    "/{usuario_id}",
+    response_model=UsuarioPublic,
+    summary="Actualizar usuario",
+    description="Actualiza los campos enviados validando que el nuevo email no esté en uso.",
 )
-async def update_producto(
-    producto_id: int,
-    producto_in: ProductoUpdate,
-    service: ProductoServiceDep,
-) -> ProductoPublic:
-    return await service.update(producto_id, producto_in)
+async def update_usuario(
+    usuario_id: int,
+    usuario_in: UsuarioUpdate,
+    service: UsuarioServiceDep,
+) -> UsuarioPublic:
+    return await service.update(usuario_id, usuario_in)
 
 
 @router.delete(
-    "/{producto_id}",
+    "/{usuario_id}",
     status_code=status.HTTP_204_NO_CONTENT,
-    summary="Eliminar producto",
-    dependencies=[SoloAdmin],
-    description="Borrado lógico: el producto queda inactivo y sale del menú.",
+    summary="Desactivar usuario",
+    description="Borrado lógico: el usuario queda inactivo (firma el historial de estados).",
 )
-async def delete_producto(
-    producto_id: int,
-    service: ProductoServiceDep,
+async def delete_usuario(
+    usuario_id: int,
+    service: UsuarioServiceDep,
 ) -> None:
-    await service.delete(producto_id)
+    await service.delete(usuario_id)
