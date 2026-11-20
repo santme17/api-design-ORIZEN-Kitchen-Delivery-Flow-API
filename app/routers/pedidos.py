@@ -10,6 +10,7 @@ from app.models.pedido import (
     PedidoAsignarRepartidor,
     PedidoCancelar,
     PedidoCreate,
+    PedidoDetalle,
     PedidoPublic,
     PedidoUpdate,
 )
@@ -66,15 +67,15 @@ async def list_pedidos(
 
 @router.get(
     "/{pedido_id}",
-    response_model=PedidoPublic,
-    summary="Obtener pedido por ID",
-    description="Busca un pedido por ID o devuelve 404 si no existe.",
+    response_model=PedidoDetalle,
+    summary="Obtener pedido con su detalle",
+    description="Devuelve el pedido con sus ítems, historial de estados y cronómetros (404 si no existe).",
 )
 async def get_pedido(
     pedido_id: int,
     service: PedidoServiceDep,
-) -> PedidoPublic:
-    return await service.get_by_id(pedido_id)
+) -> PedidoDetalle:
+    return await service.get_detail(pedido_id)
 
 
 @router.patch(
