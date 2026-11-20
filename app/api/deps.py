@@ -26,6 +26,7 @@ from app.repositories import (
     PedidoRepository,
     ProductoRepository,
     RepartidorRepository,
+    ReporteRepository,
     UsuarioRepository,
 )
 from app.services import (
@@ -37,6 +38,7 @@ from app.services import (
     PedidoService,
     ProductoService,
     RepartidorService,
+    ReporteService,
     UsuarioService,
 )
 
@@ -175,6 +177,13 @@ EstadoPedidoServiceDep = Annotated[EstadoPedidoService, Depends(get_estado_pedid
 CronometroProcesoServiceDep = Annotated[
     CronometroProcesoService, Depends(get_cronometro_proceso_service)
 ]
+
+
+def get_reporte_service(session: SessionDep) -> ReporteService:
+    return ReporteService(ReporteRepository(session))
+
+
+ReporteServiceDep = Annotated[ReporteService, Depends(get_reporte_service)]
 
 
 def get_auth_service(usuario_repo: UsuarioRepoDep) -> AuthService:
