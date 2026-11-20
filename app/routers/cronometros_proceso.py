@@ -1,7 +1,7 @@
 # app/routers/cronometros_proceso.py
 from fastapi import APIRouter, status
 
-from app.api.deps import CronometroProcesoServiceDep
+from app.api.deps import CronometroProcesoServiceDep, EquipoOperativo
 from app.models.cronometro_proceso import CronometroProcesoCreate, CronometroProcesoPublic
 from app.models.enums import EstadoProceso, NombreProceso
 
@@ -15,6 +15,7 @@ router = APIRouter(tags=["Cronómetros de proceso"])
     response_model=CronometroProcesoPublic,
     status_code=status.HTTP_201_CREATED,
     summary="Iniciar cronómetro",
+    dependencies=[EquipoOperativo],
     description=(
         "Inicia el cronómetro de un proceso del pedido. 409 si ya hay uno en curso "
         "para ese proceso, si el pedido terminó o si se pide TRANSITO en un pedido RECOGER."
@@ -81,6 +82,7 @@ async def get_cronometro(
     "/process-timers/{cronometro_id}/stop",
     response_model=CronometroProcesoPublic,
     summary="Detener cronómetro",
+    dependencies=[EquipoOperativo],
     description="Detiene el cronómetro; el servidor calcula la duración (409 si ya estaba detenido).",
 )
 async def stop_cronometro(

@@ -7,6 +7,7 @@ from app.services.pedido import PedidoService
 from app.services.producto import ProductoService
 from app.services.repartidor import RepartidorService
 from app.services.usuario import UsuarioService
+from app.services.auth import AuthService 
 
 __all__ = [
     "ClienteService",
@@ -17,4 +18,5 @@ __all__ = [
     "ProductoService",
     "RepartidorService",
     "UsuarioService",
+    "AuthService" 
 ]

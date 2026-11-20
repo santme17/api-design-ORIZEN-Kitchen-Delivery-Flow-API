@@ -1,16 +1,25 @@
 # app/core/security.py
-"""Hash de contraseñas con la librería estándar (PBKDF2-SHA256).
+"""Seguridad: hash de contraseñas (PBKDF2-SHA256) y tokens JWT.
 
-No necesita paquetes extra. El formato guardado es:
+Formato del hash guardado:
     pbkdf2_sha256$<iteraciones>$<salt_hex>$<hash_hex>
-La parte de JWT se agrega aquí mismo cuando se implemente la autenticación.
 """
 import hashlib
 import hmac
 import secrets
+from datetime import datetime, timedelta, timezone
+
+import jwt  # paquete PyJWT
+
+from app.core.config import settings
 
 _ALGORITMO = "pbkdf2_sha256"
 _ITERACIONES = 390_000
+
+
+# ==========================================
+# Contraseñas
+# ==========================================
 
 
 def hash_password(password: str) -> str:
@@ -32,3 +41,25 @@ def verify_password(password: str, password_hash: str) -> bool:
         "sha256", password.encode("utf-8"), bytes.fromhex(salt_hex), int(iteraciones)
     )
     return hmac.compare_digest(digest.hex(), digest_hex)
+
+
+# ==========================================
+# JWT (tokens de acceso)
+# ==========================================
+
+
+def create_access_token(usuario_id: int, rol: str) -> str:
+    """Firma un token con el id del usuario (sub), su rol y la fecha de vencimiento."""
+    ahora = datetime.now(timezone.utc)
+    payload = {
+        "sub": str(usuario_id),
+        "rol": rol,
+        "iat": ahora,
+        "exp": ahora + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES),
+    }
+    return jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
+
+
+def decode_access_token(token: str) -> dict:
+    """Verifica firma y vencimiento. Lanza jwt.InvalidTokenError si el token no sirve."""
+    return jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])

@@ -1,9 +1,13 @@
 # app/api/__init__.py
 from app.api.deps import (
+    AdminOCajero,
+    AdminOCocina,
+    AuthServiceDep,
     ClienteRepoDep,
     ClienteServiceDep,
     CronometroProcesoRepoDep,
     CronometroProcesoServiceDep,
+    EquipoOperativo,
     EstadoPedidoRepoDep,
     EstadoPedidoServiceDep,
     ItemPedidoRepoDep,
@@ -15,13 +19,17 @@ from app.api.deps import (
     RepartidorRepoDep,
     RepartidorServiceDep,
     SessionDep,
-    UsuarioActualIdDep,
+    SoloAdmin,
+    UsuarioActualDep,
     UsuarioRepoDep,
     UsuarioServiceDep,
+    requiere_roles,
 )
 
 __all__ = [
+    # Nivel 1: sesión
     "SessionDep",
+    # Nivel 2: repositorios
     "ClienteRepoDep",
     "CronometroProcesoRepoDep",
     "EstadoPedidoRepoDep",
@@ -30,6 +38,8 @@ __all__ = [
     "ProductoRepoDep",
     "RepartidorRepoDep",
     "UsuarioRepoDep",
+    # Nivel 3: servicios
+    "AuthServiceDep",
     "ClienteServiceDep",
     "CronometroProcesoServiceDep",
     "EstadoPedidoServiceDep",
@@ -38,5 +48,11 @@ __all__ = [
     "ProductoServiceDep",
     "RepartidorServiceDep",
     "UsuarioServiceDep",
-    "UsuarioActualIdDep",
+    # Nivel 4: usuario autenticado y roles
+    "UsuarioActualDep",
+    "requiere_roles",
+    "SoloAdmin",
+    "AdminOCajero",
+    "AdminOCocina",
+    "EquipoOperativo",
 ]
