@@ -7,6 +7,7 @@ from app.api.deps import (
     AdminOCajero,
     EstadoPedidoServiceDep,
     LimitQuery,
+    NotificadorDep,
     PedidoServiceDep,
     SkipQuery,
     UsuarioActualDep,
@@ -41,8 +42,11 @@ async def create_pedido(
     pedido_in: PedidoCreate,
     service: PedidoServiceDep,
     usuario: UsuarioActualDep,
+    notificador: NotificadorDep,
 ) -> PedidoPublic:
-    return await service.create(pedido_in, usuario_id=usuario.id)
+    pedido = await service.create(pedido_in, usuario_id=usuario.id)
+    await notificador.publicar("pedido_creado", PedidoPublic.model_validate(pedido).model_dump(mode="json"))
+    return pedido
 
 
 @router.get(
@@ -135,5 +139,8 @@ async def cancel_pedido(
     cancelar_in: PedidoCancelar,
     service: EstadoPedidoServiceDep,
     usuario: UsuarioActualDep,
+    notificador: NotificadorDep,
 ) -> EstadoPedidoPublic:
-    return await service.cancelar(pedido_id, cancelar_in, usuario_id=usuario.id)
+    estado = await service.cancelar(pedido_id, cancelar_in, usuario_id=usuario.id)
+    await notificador.publicar("estado_cambiado", EstadoPedidoPublic.model_validate(estado).model_dump(mode="json"))
+    return estado
