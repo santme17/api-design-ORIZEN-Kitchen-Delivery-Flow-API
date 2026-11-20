@@ -28,6 +28,7 @@ from app.models.pedido import (
     PedidoAsignarRepartidor,
     PedidoCancelar,
     PedidoCreate,
+    PedidoDetalle,
     PedidoPublic,
     PedidoUpdate,
 )
@@ -56,6 +57,7 @@ __all__ = [
     "EstadoPedido", "EstadoPedidoCreate", "EstadoPedidoPublic",
     "ItemPedido", "ItemPedidoCreate", "ItemPedidoPublic", "ItemPedidoUpdate",
     "Pedido", "PedidoAsignarRepartidor", "PedidoCancelar", "PedidoCreate",
+    "PedidoDetalle",
     "PedidoPublic", "PedidoUpdate",
     "Producto", "ProductoCreate", "ProductoPublic", "ProductoUpdate",
     "Repartidor", "RepartidorCreate", "RepartidorPublic", "RepartidorUpdate",
