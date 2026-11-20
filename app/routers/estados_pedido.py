@@ -1,7 +1,7 @@
 # app/routers/estados_pedido.py
 from fastapi import APIRouter, status
 
-from app.api.deps import EstadoPedidoServiceDep, UsuarioActualIdDep
+from app.api.deps import EstadoPedidoServiceDep, UsuarioActualDep
 from app.models.estado_pedido import EstadoPedidoCreate, EstadoPedidoPublic
 
 # Historial append-only (regla 2): no existen PATCH ni DELETE sobre estados.
@@ -35,6 +35,6 @@ async def create_estado_pedido(
     pedido_id: int,
     estado_in: EstadoPedidoCreate,
     service: EstadoPedidoServiceDep,
-    usuario_id: UsuarioActualIdDep,
+    usuario: UsuarioActualDep,
 ) -> EstadoPedidoPublic:
-    return await service.create(pedido_id, estado_in, usuario_id=usuario_id)
+    return await service.create(pedido_id, estado_in, usuario_id=usuario.id)
