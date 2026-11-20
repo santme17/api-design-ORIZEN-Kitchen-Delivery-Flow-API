@@ -1,7 +1,7 @@
 # app/routers/clientes.py
 from fastapi import APIRouter, status
 
-from app.api.deps import AdminOCajero, ClienteServiceDep
+from app.api.deps import AdminOCajero, ClienteServiceDep, LimitQuery, SkipQuery
 from app.models.cliente import ClienteCreate, ClientePublic, ClienteUpdate
 
 # Los clientes no se borran (tienen pedidos asociados): no hay DELETE.
@@ -31,8 +31,8 @@ async def create_cliente(
 )
 async def list_clientes(
     service: ClienteServiceDep,
-    skip: int = 0,
-    limit: int = 100,
+    skip: SkipQuery = 0,
+    limit: LimitQuery = 100,
     search: str | None = None,
 ) -> list[ClientePublic]:
     return await service.list_all(skip=skip, limit=limit, search=search)
