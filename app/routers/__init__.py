@@ -16,11 +16,13 @@ from app.routers.pedidos import router as pedidos_router
 from app.routers.productos import router as productos_router
 from app.routers.repartidores import router as repartidores_router
 from app.routers.reportes import router as reportes_router
+from app.routers.tiempo_real import router as tiempo_real_router
 from app.routers.usuarios import router as usuarios_router
 
-# Público: solo el login
+# Público: el login y el WebSocket (valida su propio token en ?token=)
 api_router = APIRouter()
 api_router.include_router(auth_router)
+api_router.include_router(tiempo_real_router)
 
 # Protegido: sin token válido responde 401
 protegido = APIRouter(dependencies=[Depends(get_usuario_actual)])
