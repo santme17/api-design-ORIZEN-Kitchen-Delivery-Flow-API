@@ -15,6 +15,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_session
+from app.core.realtime import GestorConexiones, gestor
 from app.core.security import decode_access_token
 from app.models.enums import RolUsuario
 from app.models.usuario import Usuario
@@ -251,6 +252,18 @@ AdminOCocina = requiere_roles(RolUsuario.ADMIN, RolUsuario.COCINA)
 EquipoOperativo = requiere_roles(
     RolUsuario.ADMIN, RolUsuario.COCINA, RolUsuario.REPARTIDOR
 )
+
+
+# ==========================================
+# Tiempo real: notificador de la pantalla de cocina
+# ==========================================
+
+
+def get_notificador() -> GestorConexiones:
+    return gestor
+
+
+NotificadorDep = Annotated[GestorConexiones, Depends(get_notificador)]
 
 
 # ==========================================
