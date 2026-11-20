@@ -37,10 +37,10 @@ def test_flujo_completo_de_un_pedido(client, admin, crear_usuario):
         f"{API}/orders/{pedido['id']}/courier", headers=cajero, json={"repartidor_id": repartidor["id"]}
     ).status_code == 200
 
-    # Cocina avanza el estado; un salto inválido da 409
+    # Cocina avanza el estado; un salto inválido da 409 (aunque lo intente el admin)
     url_estados = f"{API}/orders/{pedido['id']}/statuses"
     assert client.post(url_estados, headers=cocina, json={"estado": "EN_PREPARACION"}).status_code == 201
-    assert client.post(url_estados, headers=cocina, json={"estado": "ENTREGADO"}).status_code == 409
+    assert client.post(url_estados, headers=admin, json={"estado": "ENTREGADO"}).status_code == 409
 
     # El detalle trae ítems, historial y cronómetros en una sola petición
     detalle = client.get(f"{API}/orders/{pedido['id']}", headers=cajero).json()
@@ -57,3 +57,41 @@ def test_flujo_completo_de_un_pedido(client, admin, crear_usuario):
 
 def test_pedido_inexistente_responde_404(client, admin):
     assert client.get(f"{API}/orders/999", headers=admin).status_code == 404
+
+
+def test_cada_rol_solo_pone_sus_estados(client, admin, crear_usuario):
+    cajero = crear_usuario("CAJERO", "caja@test.com")
+    cocina = crear_usuario("COCINA", "cocina@test.com")
+    repartidor_user = crear_usuario("REPARTIDOR", "moto@test.com")
+    producto, cliente, repartidor = _datos_base(client, admin)
+
+    pedido = client.post(
+        f"{API}/orders/",
+        headers=cajero,
+        json={
+            "cliente_id": cliente["id"],
+            "tipo_pedido": "DOMICILIO",
+            "direccion_entrega": "Calle 10",
+            "items": [{"producto_id": producto["id"], "cantidad": 1}],
+        },
+    ).json()
+    client.patch(f"{API}/orders/{pedido['id']}/courier", headers=cajero, json={"repartidor_id": repartidor["id"]})
+    url = f"{API}/orders/{pedido['id']}/statuses"
+
+    # El cajero no cocina y el repartidor tampoco
+    assert client.post(url, headers=cajero, json={"estado": "EN_PREPARACION"}).status_code == 403
+    assert client.post(url, headers=repartidor_user, json={"estado": "EN_PREPARACION"}).status_code == 403
+
+    # Cocina prepara y empaqueta
+    assert client.post(url, headers=cocina, json={"estado": "EN_PREPARACION"}).status_code == 201
+    assert client.post(url, headers=cocina, json={"estado": "EMPAQUETADO"}).status_code == 201
+
+    # Cocina NO puede despachar ni entregar
+    assert client.post(url, headers=cocina, json={"estado": "EN_TRANSITO"}).status_code == 403
+
+    # El repartidor sí, y al entregar queda DISPONIBLE otra vez
+    assert client.post(url, headers=repartidor_user, json={"estado": "EN_TRANSITO"}).status_code == 201
+    assert client.post(url, headers=cocina, json={"estado": "ENTREGADO"}).status_code == 403
+    assert client.post(url, headers=repartidor_user, json={"estado": "ENTREGADO"}).status_code == 201
+    rep = client.get(f"{API}/couriers/{repartidor['id']}", headers=admin).json()
+    assert rep["estado_disponibilidad"] == "DISPONIBLE"
