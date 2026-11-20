@@ -1,7 +1,7 @@
 # app/routers/cronometros_proceso.py
 from fastapi import APIRouter, status
 
-from app.api.deps import CronometroProcesoServiceDep, EquipoOperativo
+from app.api.deps import CronometroProcesoServiceDep, EquipoOperativo, LimitQuery, SkipQuery
 from app.models.cronometro_proceso import CronometroProcesoCreate, CronometroProcesoPublic
 from app.models.enums import EstadoProceso, NombreProceso
 
@@ -50,8 +50,8 @@ async def list_cronometros_pedido(
 )
 async def list_cronometros(
     service: CronometroProcesoServiceDep,
-    skip: int = 0,
-    limit: int = 100,
+    skip: SkipQuery = 0,
+    limit: LimitQuery = 100,
     pedido_id: int | None = None,
     nombre_proceso: NombreProceso | None = None,
     estado_proceso: EstadoProceso | None = None,

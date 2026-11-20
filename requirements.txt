@@ -10,3 +10,4 @@ email-validator>=2.1.0
 scalar-fastapi>=1.0.0
 alembic>=1.13.0
 PyJWT>=2.8.0
+tzdata>=2024.1  # zonas horarias en Windows (zoneinfo)

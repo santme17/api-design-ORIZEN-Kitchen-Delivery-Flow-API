@@ -6,6 +6,7 @@ from app.repositories.item_pedido import ItemPedidoRepository
 from app.repositories.pedido import PedidoRepository
 from app.repositories.producto import ProductoRepository
 from app.repositories.repartidor import RepartidorRepository
+from app.repositories.reporte import ReporteRepository
 from app.repositories.usuario import UsuarioRepository
 
 __all__ = [
@@ -16,5 +17,6 @@ __all__ = [
     "PedidoRepository",
     "ProductoRepository",
     "RepartidorRepository",
+    "ReporteRepository",
     "UsuarioRepository",
 ]

@@ -10,7 +10,7 @@ una misma petición comparten la MISMA sesión (y la misma transacción).
 from typing import Annotated, Any
 
 import jwt
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Query, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -26,6 +26,7 @@ from app.repositories import (
     PedidoRepository,
     ProductoRepository,
     RepartidorRepository,
+    ReporteRepository,
     UsuarioRepository,
 )
 from app.services import (
@@ -37,6 +38,7 @@ from app.services import (
     PedidoService,
     ProductoService,
     RepartidorService,
+    ReporteService,
     UsuarioService,
 )
 
@@ -177,6 +179,13 @@ CronometroProcesoServiceDep = Annotated[
 ]
 
 
+def get_reporte_service(session: SessionDep) -> ReporteService:
+    return ReporteService(ReporteRepository(session))
+
+
+ReporteServiceDep = Annotated[ReporteService, Depends(get_reporte_service)]
+
+
 def get_auth_service(usuario_repo: UsuarioRepoDep) -> AuthService:
     return AuthService(usuario_repo)
 
@@ -242,3 +251,11 @@ AdminOCocina = requiere_roles(RolUsuario.ADMIN, RolUsuario.COCINA)
 EquipoOperativo = requiere_roles(
     RolUsuario.ADMIN, RolUsuario.COCINA, RolUsuario.REPARTIDOR
 )
+
+
+# ==========================================
+# Paginación con tope (evita ?limit=1000000)
+# ==========================================
+
+SkipQuery = Annotated[int, Query(ge=0, description="Registros a saltar")]
+LimitQuery = Annotated[int, Query(ge=1, le=100, description="Máximo 100 por página")]

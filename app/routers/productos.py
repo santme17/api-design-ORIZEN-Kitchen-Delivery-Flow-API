@@ -1,7 +1,7 @@
 # app/routers/productos.py
 from fastapi import APIRouter, status
 
-from app.api.deps import ProductoServiceDep
+from app.api.deps import LimitQuery, ProductoServiceDep, SkipQuery, SoloAdmin
 from app.models.producto import ProductoCreate, ProductoPublic, ProductoUpdate
 
 router = APIRouter(prefix="/products", tags=["Productos"])
@@ -12,6 +12,7 @@ router = APIRouter(prefix="/products", tags=["Productos"])
     response_model=ProductoPublic,
     status_code=status.HTTP_201_CREATED,
     summary="Crear producto",
+    dependencies=[SoloAdmin],
     description="Agrega un producto al menú validando que el nombre no exista.",
 )
 async def create_producto(
@@ -29,8 +30,8 @@ async def create_producto(
 )
 async def list_productos(
     service: ProductoServiceDep,
-    skip: int = 0,
-    limit: int = 100,
+    skip: SkipQuery = 0,
+    limit: LimitQuery = 100,
     search: str | None = None,
     only_active: bool = False,
 ) -> list[ProductoPublic]:
@@ -54,6 +55,7 @@ async def get_producto(
     "/{producto_id}",
     response_model=ProductoPublic,
     summary="Actualizar producto",
+    dependencies=[SoloAdmin],
     description="Actualiza nombre, precio o disponibilidad. El cambio de precio no altera pedidos existentes.",
 )
 async def update_producto(
@@ -68,6 +70,7 @@ async def update_producto(
     "/{producto_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Eliminar producto",
+    dependencies=[SoloAdmin],
     description="Borrado lógico: el producto queda inactivo y sale del menú.",
 )
 async def delete_producto(

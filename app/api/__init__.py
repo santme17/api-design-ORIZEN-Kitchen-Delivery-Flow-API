@@ -12,13 +12,16 @@ from app.api.deps import (
     EstadoPedidoServiceDep,
     ItemPedidoRepoDep,
     ItemPedidoServiceDep,
+    LimitQuery,
     PedidoRepoDep,
     PedidoServiceDep,
     ProductoRepoDep,
     ProductoServiceDep,
     RepartidorRepoDep,
     RepartidorServiceDep,
+    ReporteServiceDep,
     SessionDep,
+    SkipQuery,
     SoloAdmin,
     UsuarioActualDep,
     UsuarioRepoDep,
@@ -47,6 +50,7 @@ __all__ = [
     "PedidoServiceDep",
     "ProductoServiceDep",
     "RepartidorServiceDep",
+    "ReporteServiceDep",
     "UsuarioServiceDep",
     # Nivel 4: usuario autenticado y roles
     "UsuarioActualDep",
@@ -55,4 +59,7 @@ __all__ = [
     "AdminOCajero",
     "AdminOCocina",
     "EquipoOperativo",
+    # Paginación
+    "SkipQuery",
+    "LimitQuery",
 ]

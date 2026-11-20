@@ -15,6 +15,7 @@ from app.routers.items_pedido import router as items_pedido_router
 from app.routers.pedidos import router as pedidos_router
 from app.routers.productos import router as productos_router
 from app.routers.repartidores import router as repartidores_router
+from app.routers.reportes import router as reportes_router
 from app.routers.usuarios import router as usuarios_router
 
 # Público: solo el login
@@ -31,6 +32,7 @@ protegido.include_router(pedidos_router)
 protegido.include_router(items_pedido_router)
 protegido.include_router(estados_pedido_router)
 protegido.include_router(cronometros_proceso_router)
+protegido.include_router(reportes_router)
 
 api_router.include_router(protegido)
 
