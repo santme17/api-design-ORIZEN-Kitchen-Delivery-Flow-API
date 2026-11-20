@@ -1,10 +1,11 @@
 # app/services/pedido.py
 import secrets
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from decimal import Decimal
 
 from fastapi import HTTPException, status
 
+from app.core.tiempo import rango_dia_utc
 from app.models.enums import EstadoDisponibilidad, EstadoOrden, TipoPedido
 from app.models.pedido import (
     Pedido,
@@ -83,7 +84,11 @@ class PedidoService:
         cliente_id: int | None = None,
         fecha_desde: datetime | None = None,
         fecha_hasta: datetime | None = None,
+        fecha: date | None = None,
     ) -> list[Pedido]:
+        # `fecha` = un día completo en hora de Colombia (tiene prioridad sobre desde/hasta)
+        if fecha is not None:
+            fecha_desde, fecha_hasta = rango_dia_utc(fecha)
         if fecha_desde and fecha_hasta and fecha_desde > fecha_hasta:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
