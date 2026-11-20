@@ -1,4 +1,5 @@
 from typing import Literal
+from pydantic import Field  # import nuevo, arriba de pydantic_settings
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -19,7 +20,7 @@ class Settings(BaseSettings):
     ECHO_SQL: bool = False
 
     # Seguridad (JWT). SECRET_KEY se cambia SIEMPRE en el .env (mín. 32 caracteres)
-    SECRET_KEY: str = "cambia-esta-clave-en-el-env-minimo-32-caracteres"
+    SECRET_KEY: str = Field(min_length=32)
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 8  # un turno de trabajo
 
@@ -31,7 +32,7 @@ class Settings(BaseSettings):
 
     # Primer administrador: se crea al arrancar si la tabla de usuarios está vacía
     FIRST_ADMIN_EMAIL: str = "admin@orizen.com"
-    FIRST_ADMIN_PASSWORD: str = "cambia-esta-clave"
+    FIRST_ADMIN_PASSWORD: str = Field(min_length=8)
 
     # Selección de Base de Datos: "sqlite" o "postgres"
     DB_TYPE: Literal["sqlite", "postgres"] = "sqlite"
