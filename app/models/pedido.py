@@ -8,7 +8,9 @@ from sqlmodel import Field, Relationship, SQLModel
 
 from app.models.common import TZDateTime, utcnow
 from app.models.enums import EstadoOrden, TipoPedido
-from app.models.item_pedido import ItemPedidoCreate
+from app.models.cronometro_proceso import CronometroProcesoPublic
+from app.models.estado_pedido import EstadoPedidoPublic
+from app.models.item_pedido import ItemPedidoCreate, ItemPedidoPublic
 
 if TYPE_CHECKING:
     from app.models.cliente import Cliente
@@ -76,6 +78,13 @@ class PedidoPublic(PedidoBase):
     estado_actual: EstadoOrden
     total: Decimal
     fecha_creacion: datetime
+
+
+# DTO de detalle: el pedido con sus ítems, historial y cronómetros (GET /orders/{id})
+class PedidoDetalle(PedidoPublic):
+    items: list[ItemPedidoPublic] = []
+    estados: list[EstadoPedidoPublic] = []
+    cronometros: list[CronometroProcesoPublic] = []
 
 
 # Extras para los endpoints PATCH /orders/{id}/courier y POST /orders/{id}/cancel
