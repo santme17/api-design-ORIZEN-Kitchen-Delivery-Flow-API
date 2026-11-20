@@ -84,10 +84,12 @@ from app.repositories import (
     UsuarioRepository,
 )
 from app.core.config import settings
+from app.core.database import async_session_maker
 from app.core.errors import registrar_manejadores
 from app.core.security import verify_password
 from app.routers import api_router
 from app.services import (
+    AuthService,
     ClienteService,
     CronometroProcesoService,
     EstadoPedidoService,
@@ -919,6 +921,9 @@ def resumen(resultados: list[dict[str, Any]]) -> dict[str, int]:
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     # Las tablas las crea Alembic:  alembic upgrade head  (antes de arrancar uvicorn)
+    # Si no hay usuarios, crea el ADMIN del .env para poder hacer el primer login
+    async with async_session_maker() as session:
+        await AuthService(UsuarioRepository(session)).crear_admin_inicial()
     yield
 
 
