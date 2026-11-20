@@ -34,9 +34,10 @@ from types import SimpleNamespace
 from typing import Any
 
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from scalar_fastapi import get_scalar_api_reference
+from sqlalchemy import text
 from sqlalchemy.engine import make_url
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import (
@@ -83,6 +84,7 @@ from app.repositories import (
     RepartidorRepository,
     UsuarioRepository,
 )
+from app.api.deps import SessionDep
 from app.core.config import settings
 from app.core.database import async_session_maker
 from app.core.errors import registrar_manejadores
@@ -957,11 +959,36 @@ async def scalar_docs() -> HTMLResponse:
     return get_scalar_api_reference(openapi_url=app.openapi_url, title=app.title)
 
 
+@app.get("/health", tags=["Health"])
+async def health_check(session: SessionDep) -> JSONResponse:
+    """Diagnóstico de salud: la API responde y la base de datos también.
+
+    Igual al del profe, pero además hace un SELECT 1. Si la base no responde
+    devuelve 503, y así Docker / el servidor saben que algo anda mal.
+    """
+    try:
+        await session.execute(text("SELECT 1"))
+        base_datos = "ok"
+    except Exception:  # noqa: BLE001
+        base_datos = "sin conexión"
+    sano = base_datos == "ok"
+    return JSONResponse(
+        status_code=200 if sano else 503,
+        content={
+            "status": "healthy" if sano else "unhealthy",
+            "project": settings.PROJECT_NAME,
+            "version": settings.VERSION,
+            "database": base_datos,
+        },
+    )
+
+
 @app.get("/")
 async def raiz() -> dict[str, str]:
     return {
         "mensaje": "Arnés de pruebas de ORIZEN",
         "docs": "GET /scalar",
+        "health": "GET /health",
         "repositorios": "GET /test/repositories",
         "servicios": "POST /test-services",
     }

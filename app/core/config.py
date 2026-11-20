@@ -16,6 +16,7 @@ class Settings(BaseSettings):
 
     # Configuración General (.env)
     PROJECT_NAME: str = "api-design-ORIZEN-Kitchen-Delivery-Flow-API"
+    VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
     ECHO_SQL: bool = False
 

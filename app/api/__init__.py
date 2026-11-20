@@ -13,6 +13,7 @@ from app.api.deps import (
     ItemPedidoRepoDep,
     ItemPedidoServiceDep,
     LimitQuery,
+    NotificadorDep,
     PedidoRepoDep,
     PedidoServiceDep,
     ProductoRepoDep,
@@ -59,6 +60,8 @@ __all__ = [
     "AdminOCajero",
     "AdminOCocina",
     "EquipoOperativo",
+    # Tiempo real
+    "NotificadorDep",
     # Paginación
     "SkipQuery",
     "LimitQuery",
