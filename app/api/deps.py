@@ -47,7 +47,9 @@ from app.services import (
 # Nivel 1: Sesión de base de datos (Core)
 # ==========================================
 
-SessionDep = Annotated[AsyncSession, Depends(get_session)]
+# scope="function": el commit de get_session se hace ANTES de enviar la respuesta,
+# así el cliente nunca recibe un 201 de algo que al final no se guardó.
+SessionDep = Annotated[AsyncSession, Depends(get_session, scope="function")]
 
 
 # ==========================================
