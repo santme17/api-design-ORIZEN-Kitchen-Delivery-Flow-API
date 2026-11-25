@@ -55,7 +55,7 @@ class ProductoRepository:
     async def create(self, producto_in: ProductoCreate) -> Producto:
         db_producto = Producto.model_validate(producto_in)
         self.session.add(db_producto)
-        await self.session.commit()
+        await self.session.flush()
         await self.session.refresh(db_producto)
         return db_producto
 
@@ -70,6 +70,6 @@ class ProductoRepository:
             setattr(db_producto, field, value)
 
         self.session.add(db_producto)
-        await self.session.commit()
+        await self.session.flush()
         await self.session.refresh(db_producto)
         return db_producto
