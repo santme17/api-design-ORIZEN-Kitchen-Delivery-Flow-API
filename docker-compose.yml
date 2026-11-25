@@ -1,0 +1,36 @@
+# docker-compose.yml - Levanta la API + PostgreSQL en local
+#   docker compose up --build        (API en http://localhost:8000/scalar)
+#   docker compose down              (apaga; los datos quedan en el volumen)
+#   docker compose down -v           (apaga y BORRA los datos)
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: orizen
+      POSTGRES_PASSWORD: orizen
+      POSTGRES_DB: orizen
+    ports:
+      - "5432:5432"
+    volumes:
+      - datos_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U orizen -d orizen"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: .
+    env_file: .env
+    environment:
+      # Dentro de Docker la base es el servicio "db", no Neon ni SQLite
+      DB_TYPE: postgres
+      POSTGRES_URL: postgresql://orizen:orizen@db:5432/orizen
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  datos_db:

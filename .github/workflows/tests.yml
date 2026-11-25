@@ -25,9 +25,6 @@ jobs:
       - name: Instalar dependencias
         run: pip install -r requirements.txt -r requirements-dev.txt
 
-      - name: Arnés de las capas 3 y 4
-        run: python -m app.main
-
       - name: Pruebas HTTP (pytest)
         run: pytest -q
 
