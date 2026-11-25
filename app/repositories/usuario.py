@@ -60,7 +60,7 @@ class UsuarioRepository:
             usuario_in, update={"password_hash": password_hash}
         )
         self.session.add(db_usuario)
-        await self.session.commit()
+        await self.session.flush()
         await self.session.refresh(db_usuario)
         return db_usuario
 
@@ -89,6 +89,6 @@ class UsuarioRepository:
             db_usuario.password_hash = password_hash
 
         self.session.add(db_usuario)
-        await self.session.commit()
+        await self.session.flush()
         await self.session.refresh(db_usuario)
         return db_usuario
