@@ -2,7 +2,6 @@ from collections.abc import AsyncGenerator
 from typing import Any
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
-from sqlmodel import SQLModel
 
 from app.core.config import settings
 
@@ -28,14 +27,17 @@ async_session_maker = sessionmaker(
     autoflush=False,
 )
 
-async def init_db() -> None:
-    """Crea las tablas en la base de datos si no existen."""
-    import app.models  # noqa: F401
-
-    async with engine.begin() as conn:
-        await conn.run_sync(SQLModel.metadata.create_all)
-
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
-    """Dependencia de FastAPI para obtener la sesión de base de datos."""
+    """Dependencia de FastAPI: una sesión = una transacción por petición (unidad de trabajo).
+
+    Los repositorios solo hacen flush(). Aquí se decide el final:
+    - Si la petición terminó bien  -> commit() (se guarda todo junto).
+    - Si hubo cualquier error       -> rollback() (no se guarda nada a medias).
+    """
     async with async_session_maker() as session:
-        yield session
+        try:
+            yield session
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise

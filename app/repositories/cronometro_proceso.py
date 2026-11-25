@@ -87,12 +87,8 @@ class CronometroProcesoRepository:
         db_cronometro = CronometroProceso.model_validate(
             cronometro_in, update={"pedido_id": pedido_id}
         )
-        try:
-            self.session.add(db_cronometro)
-            await self.session.commit()
-        except Exception:
-            await self.session.rollback()
-            raise
+        self.session.add(db_cronometro)
+        await self.session.flush()
         await self.session.refresh(db_cronometro)
         return db_cronometro
 
@@ -115,6 +111,6 @@ class CronometroProcesoRepository:
         db_cronometro.estado_proceso = EstadoProceso.COMPLETADO
 
         self.session.add(db_cronometro)
-        await self.session.commit()
+        await self.session.flush()
         await self.session.refresh(db_cronometro)
         return db_cronometro

@@ -40,12 +40,19 @@ def client(tmp_path) -> Iterator[TestClient]:
                 UsuarioCreate(email=ADMIN_EMAIL, rol=RolUsuario.ADMIN, password=ADMIN_PASSWORD),
                 password_hash=hash_password(ADMIN_PASSWORD),
             )
+            await session.commit()  # los repositorios solo hacen flush
 
     asyncio.run(preparar())
 
     async def get_session_test() -> AsyncGenerator[AsyncSession, None]:
+        # Igual que get_session: commit si todo sale bien, rollback si hay error
         async with factory() as session:
-            yield session
+            try:
+                yield session
+                await session.commit()
+            except Exception:
+                await session.rollback()
+                raise
 
     app.dependency_overrides[get_session] = get_session_test
     # Sin "with": no se ejecuta el lifespan, así no se toca la BD del .env

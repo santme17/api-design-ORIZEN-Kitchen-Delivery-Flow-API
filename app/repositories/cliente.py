@@ -52,7 +52,7 @@ class ClienteRepository:
     async def create(self, cliente_in: ClienteCreate) -> Cliente:
         db_cliente = Cliente.model_validate(cliente_in)
         self.session.add(db_cliente)
-        await self.session.commit()
+        await self.session.flush()
         await self.session.refresh(db_cliente)
         return db_cliente
 
@@ -67,6 +67,6 @@ class ClienteRepository:
             setattr(db_cliente, field, value)
 
         self.session.add(db_cliente)
-        await self.session.commit()
+        await self.session.flush()
         await self.session.refresh(db_cliente)
         return db_cliente
