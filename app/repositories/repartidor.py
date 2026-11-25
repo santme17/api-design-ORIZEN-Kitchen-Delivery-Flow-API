@@ -59,7 +59,7 @@ class RepartidorRepository:
     async def create(self, repartidor_in: RepartidorCreate) -> Repartidor:
         db_repartidor = Repartidor.model_validate(repartidor_in)
         self.session.add(db_repartidor)
-        await self.session.commit()
+        await self.session.flush()
         await self.session.refresh(db_repartidor)
         return db_repartidor
 
@@ -76,7 +76,7 @@ class RepartidorRepository:
             setattr(db_repartidor, field, value)
 
         self.session.add(db_repartidor)
-        await self.session.commit()
+        await self.session.flush()
         await self.session.refresh(db_repartidor)
         return db_repartidor
 
@@ -88,4 +88,4 @@ class RepartidorRepository:
         """Marca al repartidor como eliminado (DELETE /couriers/:id). No borra la fila."""
         db_repartidor.deleted_at = utcnow()
         self.session.add(db_repartidor)
-        await self.session.commit()
+        await self.session.flush()
