@@ -1,4 +1,4 @@
-fastapi>=0.115.0
+fastapi>=0.121.0  # 0.121+: Depends(..., scope="function")
 uvicorn[standard]>=0.30.0
 sqlmodel>=0.0.22
 sqlalchemy[asyncio]>=2.0.0
