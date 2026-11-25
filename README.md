@@ -1,6 +1,6 @@
 # ORIZEN Kitchen & Delivery Flow API
 
-![Status](https://img.shields.io/badge/Status-Planning-blue)
+![Status](https://img.shields.io/badge/Status-MVP-brightgreen)
 ![Version](https://img.shields.io/badge/Version-1.0.0-green)
 
 ## Descripción del Proyecto
@@ -8,6 +8,62 @@
 Esta API REST funciona como el motor principal para la gestión de estados, trazabilidad y medición de tiempos operativos en el restaurante ORIZEN. Su objetivo es orquestar el ciclo de vida completo de un pedido, desde que es recibido en caja hasta que el repartidor lo entrega en la puerta del cliente.
 
 El sistema resuelve la opacidad y la ansiedad en el seguimiento de pedidos sustituyendo los tradicionales "tiempos estimados estáticos" por una trazabilidad en tiempo real. Esto se logra mediante el registro de cronómetros por cada proceso (espera en cola, preparación en wok, empaquetado y tránsito), permitiendo tanto al restaurante auditar su eficiencia como al cliente final conocer exactamente qué está pasando con su comida.
+
+## Demo en línea
+
+| Qué | Enlace |
+|-----|--------|
+| Frontend ([repo aparte](https://github.com/JuanR1207/orizen-frontend)) | _(se agrega cuando quede desplegado en Render)_ |
+| API (documentación Scalar) | _(URL de Render)_`/scalar` |
+| Salud de la API | _(URL de Render)_`/health` |
+
+> Render (plan gratis) duerme la API tras 15 minutos sin uso. Si la primera petición tarda, es normal: espera a que `/health` responda.
+
+### Usuarios de demo
+
+Los crea el script `python -m app.seed`. La contraseña de los usuarios demo es la de `SEED_PASSWORD` (por defecto `orizen2026`); la del admin es la de `FIRST_ADMIN_PASSWORD` del `.env`.
+
+| Rol | Email | Qué puede hacer |
+|-----|-------|-----------------|
+| ADMIN | `admin@orizen.com` | Todo: productos, repartidores, despacho y reportes |
+| CAJERO | `cajero@orizen.com` | Registrar clientes, crear pedidos, entregar pedidos para recoger y cancelar |
+| COCINA | `cocina@orizen.com` | Pasar pedidos a preparación y empaquetado (con cronómetros) |
+| REPARTIDOR | `repartidor@orizen.com` | Marcar pedidos en tránsito y entregados |
+
+## Cómo correr el proyecto
+
+### Opción A: Docker (API + PostgreSQL)
+
+```bash
+cp .env.example .env          # y cambia SECRET_KEY y FIRST_ADMIN_PASSWORD
+docker compose up --build     # API en http://localhost:8000/scalar
+docker compose exec api python -m app.seed   # datos de demo (en otra terminal)
+```
+
+Las migraciones (`alembic upgrade head`) se aplican solas al arrancar el contenedor.
+
+### Opción B: Sin Docker (SQLite o Neon)
+
+```bash
+python -m venv .venv
+.venv\Scripts\activate            # Windows (en Linux/Mac: source .venv/bin/activate)
+pip install -r requirements.txt -r requirements-dev.txt
+alembic upgrade head
+python -m app.seed
+uvicorn app.main:app --reload
+```
+
+### Frontend
+
+El frontend es un proyecto aparte que consume esta API: [JuanR1207/orizen-frontend](https://github.com/JuanR1207/orizen-frontend) (React + Vite). Para que el navegador pueda llamar la API, el dominio del frontend tiene que estar en `CORS_ORIGINS` del `.env` (en local ya vienen `http://localhost:5173` y `http://localhost:3000`).
+
+### Pruebas
+
+```bash
+pytest -q
+```
+
+GitHub Actions corre las pruebas y las migraciones en cada PR hacia `develop` y `main`.
 
 ## Video de Presentación
 
@@ -154,15 +210,16 @@ erDiagram
 
 ## Documentación de Endpoints (API Design)
 
-Endpoints diseñados bajo estándares RESTful. Base URL propuesta: `http://api.orizen.com/v1`
+Endpoints diseñados bajo estándares RESTful. Base URL: `<URL de la API>/api/v1`. La documentación interactiva completa está en `/scalar`.
 
-Todos los endpoints, excepto `POST /auth/login`, requieren el header `Authorization: Bearer <token>`.
+Todos los endpoints, excepto `POST /auth/login` y `GET /health`, requieren el header `Authorization: Bearer <token>`.
 
 ### 0. Autenticación
 
 | Método | Endpoint       | Descripción                  | Payload (Body)                                  | Respuesta Esperada |
 |--------|----------------|------------------------------|-------------------------------------------------|--------------------|
 | POST   | `/auth/login`  | Iniciar sesión y obtener JWT | `{ "email": "...", "password": "..." }`         | 200 OK (token)     |
+| GET    | `/auth/me`     | Usuario dueño del token      | N/A                                             | 200 OK (Object)    |
 
 ### 1. Recurso: Clientes (`/customers`)
 
@@ -171,7 +228,7 @@ Todos los endpoints, excepto `POST /auth/login`, requieren el header `Authorizat
 | GET    | `/customers`      | Listar clientes            | N/A                                               | 200 OK (Array)     |
 | GET    | `/customers/:id`  | Obtener un cliente         | N/A                                               | 200 OK (Object)    |
 | POST   | `/customers`      | Registrar un cliente       | `{ "nombre": "...", "telefono": "..." }`          | 201 Created        |
-| PUT    | `/customers/:id`  | Actualizar datos           | `{ "telefono": "..." }`                           | 200 OK             |
+| PATCH  | `/customers/:id`  | Actualizar datos           | `{ "telefono": "..." }`                           | 200 OK             |
 
 ### 2. Recurso: Productos (`/products`)
 
@@ -180,7 +237,7 @@ Todos los endpoints, excepto `POST /auth/login`, requieren el header `Authorizat
 | GET    | `/products`       | Listar productos                      | N/A                                     | 200 OK (Array)     |
 | GET    | `/products/:id`   | Obtener un producto                   | N/A                                     | 200 OK (Object)    |
 | POST   | `/products`       | Crear un producto                     | `{ "nombre": "...", "precio": 0.0 }`   | 201 Created        |
-| PUT    | `/products/:id`   | Actualizar producto                   | `{ "precio": 0.0, "activo": true }`    | 200 OK             |
+| PATCH  | `/products/:id`   | Actualizar producto                   | `{ "precio": 0.0, "activo": true }`    | 200 OK             |
 
 ### 3. Recurso: Repartidores (`/couriers`)
 
@@ -189,7 +246,7 @@ Todos los endpoints, excepto `POST /auth/login`, requieren el header `Authorizat
 | GET    | `/couriers`       | Listar repartidores               | N/A                                      | 200 OK (Array)     |
 | GET    | `/couriers/:id`   | Obtener un repartidor             | N/A                                      | 200 OK (Object)    |
 | POST   | `/couriers`       | Registrar un repartidor           | `{ "nombre": "...", "vehiculo": "..." }` | 201 Created        |
-| PUT    | `/couriers/:id`   | Actualizar datos del repartidor   | `{ "estado_disponibilidad": "..." }`     | 200 OK             |
+| PATCH  | `/couriers/:id`   | Actualizar datos del repartidor   | `{ "estado_disponibilidad": "..." }`     | 200 OK             |
 | DELETE | `/couriers/:id`   | Eliminar repartidor (soft delete) | N/A                                      | 204 No Content     |
 
 ### 4. Recurso: Pedidos (`/orders`)
@@ -199,7 +256,7 @@ Todos los endpoints, excepto `POST /auth/login`, requieren el header `Authorizat
 | GET    | `/orders`               | Listar pedidos (filtros: estado, fecha, tipo) | N/A                                                                                             | 200 OK (Array)     |
 | GET    | `/orders/:id`           | Obtener un pedido                             | N/A                                                                                             | 200 OK (Object)    |
 | POST   | `/orders`               | Crear un pedido con sus ítems                 | `{ "cliente_id": "...", "tipo_pedido": "DOMICILIO", "direccion_entrega": "...", "items": [{ "producto_id": "...", "cantidad": 2 }] }` | 201 Created        |
-| PUT    | `/orders/:id`           | Actualizar datos del pedido                   | `{ "direccion_entrega": "..." }`                                                                | 200 OK             |
+| PATCH  | `/orders/:id`           | Actualizar datos del pedido                   | `{ "direccion_entrega": "..." }`                                                                | 200 OK             |
 | PATCH  | `/orders/:id/courier`   | Asignar repartidor al pedido                  | `{ "repartidor_id": "..." }`                                                                    | 200 OK             |
 | POST   | `/orders/:id/cancel`    | Cancelar el pedido                            | `{ "observacion": "..." }`                                                                      | 200 OK             |
 
@@ -226,6 +283,16 @@ El historial de estados es append-only: no existen `PUT` ni `DELETE` sobre estad
 | GET    | `/process-timers/:id`         | Obtener un cronómetro                          | N/A            | 200 OK (Object)    |
 | PATCH  | `/process-timers/:id/stop`    | Detener el cronómetro y calcular la duración   | N/A            | 200 OK             |
 
+### 7. Reportes (solo ADMIN) y tiempo real
+
+| Método | Endpoint                    | Descripción                                             |
+|--------|-----------------------------|---------------------------------------------------------|
+| GET    | `/reports/daily-summary`    | Pedidos por estado, ventas y ticket promedio del día    |
+| GET    | `/reports/process-times`    | Promedio, mínimo y máximo de cada proceso               |
+| GET    | `/reports/top-products`     | Productos más vendidos del día                          |
+| WS     | `/ws/kitchen?token=<jwt>`   | Pantalla de cocina: recibe `pedido_creado` y `estado_cambiado` |
+| GET    | `/health` (sin `/api/v1`)   | La API y la base de datos responden                     |
+
 ### Códigos de Error Comunes
 
 | Código | Uso |
@@ -237,28 +304,35 @@ El historial de estados es append-only: no existen `PUT` ni `DELETE` sobre estad
 | 409 Conflict             | Transición de estado inválida, cronómetro ya activo, repartidor no disponible |
 | 422 Unprocessable Entity | Falla de validación (Pydantic) |
 
-## Stack Tecnológico Propuesto
+## Stack Tecnológico
 
 | Componente     | Tecnología |
 |----------------|------------|
-| Lenguaje       | Python |
-| Framework      | FastAPI |
-| Base de datos  | PostgreSQL |
-| Autenticación  | JWT (JSON Web Tokens) |
-| Validación     | Pydantic |
-| Contenedores   | Docker Compose |
+| Lenguaje       | Python 3.12 |
+| Framework      | FastAPI + SQLModel (async) |
+| Base de datos  | PostgreSQL (Neon en producción, Docker en local) |
+| Migraciones    | Alembic |
+| Autenticación  | JWT (PyJWT) con roles |
+| Documentación  | Scalar |
+| Pruebas        | pytest + GitHub Actions |
+| Contenedores   | Docker + Docker Compose |
+| Frontend       | React + Vite, en su propio repo ([orizen-frontend](https://github.com/JuanR1207/orizen-frontend)) |
+| Despliegue     | Render (API como servicio Docker) |
 
-## Roadmap / Próximos Pasos
+## Roadmap
 
-1. Configurar el entorno de desarrollo local con Docker Compose.
-2. Crear las migraciones de base de datos basadas en el modelo ER (incluido el índice único parcial de cronómetros).
-3. Implementar autenticación JWT y control de acceso por rol.
-4. Implementar controladores y validaciones Pydantic para los endpoints GET y POST.
-5. Implementar la máquina de estados de pedidos y las reglas de negocio.
-6. Escribir pruebas (Postman y pytest) para los casos válidos e inválidos de transición.
+- [x] Modelo de datos, migraciones con Alembic y reglas de negocio
+- [x] Autenticación JWT con roles, paginación, reportes y cocina en tiempo real
+- [x] Unidad de trabajo: una transacción por petición (commit o rollback en `get_session`)
+- [x] Pruebas con pytest y CI en GitHub Actions
+- [x] Docker y Docker Compose
+- [x] Frontend en un repo aparte que consume la API (Caja, Cocina, Entregas y Admin)
+- [ ] Despliegue en Render y paso a `main`
+- [ ] Proyecto final: más reportes, mejoras del frontend y pruebas de carga
 
 ## Enlaces
 
-- Repositorio GitHub: [santme17/api-design-ORIZEN-Kitchen-Delivery-Flow-API](https://github.com/santme17/api-design-ORIZEN-Kitchen-Delivery-Flow-API)
+- Repositorio de la API: [santme17/api-design-ORIZEN-Kitchen-Delivery-Flow-API](https://github.com/santme17/api-design-ORIZEN-Kitchen-Delivery-Flow-API)
+- Repositorio del frontend: [JuanR1207/orizen-frontend](https://github.com/JuanR1207/orizen-frontend)
 - Video de presentación: [Ver video en YouTube](https://www.youtube.com/watch?v=SOTZqKKSSVw)
 - Organización del equipo: [Reemplazar con enlace a Trello/Jira](#)
