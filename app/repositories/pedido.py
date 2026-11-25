@@ -121,38 +121,34 @@ class PedidoRepository:
         `usuario_id` (quien crea el pedido, sale del JWT) es obligatorio porque
         el estado inicial EN_COLA se registra en el historial.
         """
-        try:
-            db_pedido = Pedido(
-                **pedido_in.model_dump(exclude={"items"}),
-                codigo_orden=codigo_orden,
-                total=total,
-                estado_actual=EstadoOrden.EN_COLA,
-            )
-            self.session.add(db_pedido)
-            # flush envía el INSERT sin cerrar la transacción: así db_pedido.id ya existe
-            await self.session.flush()
+        db_pedido = Pedido(
+            **pedido_in.model_dump(exclude={"items"}),
+            codigo_orden=codigo_orden,
+            total=total,
+            estado_actual=EstadoOrden.EN_COLA,
+        )
+        self.session.add(db_pedido)
+        # flush envía el INSERT sin cerrar la transacción: así db_pedido.id ya existe
+        await self.session.flush()
 
-            for item_in in pedido_in.items:
-                self.session.add(
-                    ItemPedido(
-                        pedido_id=db_pedido.id,
-                        producto_id=item_in.producto_id,
-                        cantidad=item_in.cantidad,
-                        precio_unitario=precios[item_in.producto_id],
-                    )
-                )
-
+        for item_in in pedido_in.items:
             self.session.add(
-                EstadoPedido(
+                ItemPedido(
                     pedido_id=db_pedido.id,
-                    usuario_id=usuario_id,
-                    estado=EstadoOrden.EN_COLA,
+                    producto_id=item_in.producto_id,
+                    cantidad=item_in.cantidad,
+                    precio_unitario=precios[item_in.producto_id],
                 )
             )
-            await self.session.commit()
-        except Exception:
-            await self.session.rollback()
-            raise
+
+        self.session.add(
+            EstadoPedido(
+                pedido_id=db_pedido.id,
+                usuario_id=usuario_id,
+                estado=EstadoOrden.EN_COLA,
+            )
+        )
+        await self.session.flush()
 
         await self.session.refresh(db_pedido)
         return db_pedido
@@ -168,7 +164,7 @@ class PedidoRepository:
             setattr(db_pedido, field, value)
 
         self.session.add(db_pedido)
-        await self.session.commit()
+        await self.session.flush()
         await self.session.refresh(db_pedido)
         return db_pedido
 
@@ -184,6 +180,6 @@ class PedidoRepository:
 
         self.session.add(db_pedido)
         self.session.add(db_repartidor)
-        await self.session.commit()
+        await self.session.flush()
         await self.session.refresh(db_pedido)
         return db_pedido
