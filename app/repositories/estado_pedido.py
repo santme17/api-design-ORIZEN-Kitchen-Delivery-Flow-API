@@ -61,13 +61,9 @@ class EstadoPedidoRepository:
         )
         db_pedido.estado_actual = estado_in.estado
 
-        try:
-            self.session.add(db_estado)
-            self.session.add(db_pedido)
-            await self.session.commit()
-        except Exception:
-            await self.session.rollback()
-            raise
+        self.session.add(db_estado)
+        self.session.add(db_pedido)
+        await self.session.flush()
 
         await self.session.refresh(db_estado)
         return db_estado
